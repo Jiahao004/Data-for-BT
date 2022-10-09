@@ -537,3 +537,28 @@ We conduct the experiments on WMT14 EN-DE and EN-RU datasets, the results are sh
 | Gamma Sampling  | 30.9  | 35.0  | 38.9  | 36.3  |
 
 
+## Citation
+```bitext
+@inproceedings{xu-etal-2022-synthetic,
+    title = "On Synthetic Data for Back Translation",
+    author = "Xu, Jiahao  and
+      Ruan, Yubin  and
+      Bi, Wei  and
+      Huang, Guoping  and
+      Shi, Shuming  and
+      Chen, Lihui  and
+      Liu, Lemao",
+    booktitle = "Proceedings of the 2022 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies",
+    month = jul,
+    year = "2022",
+    address = "Seattle, United States",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2022.naacl-main.32",
+    doi = "10.18653/v1/2022.naacl-main.32",
+    pages = "419--430",
+    abstract = "Back translation (BT) is one of the most significant technologies in NMT research fields. Existing attempts on BT share a common characteristic: they employ either beam search or random sampling to generate synthetic data with a backward model but seldom work studies the role of synthetic data in the performance of BT. This motivates us to ask a fundamental question: what kind of synthetic data contributes to BT performance?Through both theoretical and empirical studies, we identify two key factors on synthetic data controlling the back-translation NMT performance, which are quality and importance. Furthermore, based on our findings, we propose a simple yet effective method to generate synthetic data to better trade off both factors so as to yield the better performance for BT. We run extensive experiments on WMT14 DE-EN, EN-DE, and RU-EN benchmark tasks. By employing our proposed method to generate synthetic data, our BT model significantly outperforms the standard BT baselines (i.e., beam and sampling based methods for data generation), which proves the effectiveness of our proposed methods.",
+}
+```
+
+## Questions?
+If you have and questions, welcome to ask in repo Issues.
