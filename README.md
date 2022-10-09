@@ -1,42 +1,13 @@
-# On Synthetic Data for Back Translation
+## On Synthetic Data for Back Translation
 
-This is the code for NAACL2022 paper [On Synthetic Data for Back Translation](https://aclanthology.org/2022.naacl-main.32/)
+This repo is the code for NAACL2022 paper [On Synthetic Data for Back Translation](https://aclanthology.org/2022.naacl-main.32/)
 
-```bitext
-@inproceedings{xu-etal-2022-synthetic,
-    title = "On Synthetic Data for Back Translation",
-    author = "Xu, Jiahao  and
-      Ruan, Yubin  and
-      Bi, Wei  and
-      Huang, Guoping  and
-      Shi, Shuming  and
-      Chen, Lihui  and
-      Liu, Lemao",
-    booktitle = "Proceedings of the 2022 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies",
-    month = jul,
-    year = "2022",
-    address = "Seattle, United States",
-    publisher = "Association for Computational Linguistics",
-    url = "https://aclanthology.org/2022.naacl-main.32",
-    doi = "10.18653/v1/2022.naacl-main.32",
-    pages = "419--430",
-}
-```
+## Requirements
 
-The implementation of paper on synthetic data for back translation
+We use python3.7, pytorch>=1.10.0, and cuda>=10.2, and [fairseq 10.2](https://github.com/pytorch/fairseq/archive/refs/tags/v0.10.2.zip)
 
-# Requirements
 
-we use python3.7, pytorch>=1.10.0, and cuda>=10.2
-
-[comment]: <> (, or using docker from ```mirrors.tencent.com/jh_xu/g-tlinux2.2-python3.6-cuda11.0-cudnn8.1:latest```)
-
-For packages, 
-a [fairseq 10.2](https://github.com/pytorch/fairseq/archive/refs/tags/v0.10.2.zip) is needed
-
-[comment]: <> (This also could be found in path ```/apdcephfs/share_916081/jettexu/importance_sampling/fairseq```)
-
-To install fairseq, 
+To install fairseq, use below command
 ```
    cd $PROJECT_PATH
    git clone https://github.com/pytorch/fairseq
@@ -46,15 +17,11 @@ To install fairseq,
 ```
 Don't forget to install other packages required for back translation,
 ```
-export PYTHONIOENCODING=utf-8
-export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-
 pip install subword_nmt
 pip install -U sacremoses==0.0.41
 ```
 
 Git sacremoses and subword-nmt by,
-
 ```
 git clone https://github.com/moses-smt/mosesdecoder.git
 git clone https://github.com/rsennrich/subword-nmt.git
@@ -62,11 +29,12 @@ git clone https://github.com/rsennrich/subword-nmt.git
 
 Since we need the script in sacremoses and subword-nmt for data preprocessing.
 
-# A Walk Through
+## A Walk Through
+In this section, we have a walk through about the whole project, including back translation baselines and our proposed Gamma Sampling method
 
-## Step1: Data Preprocessing
+### Step1: Data Preprocessing ###
 
-### Parallel Data ###
+#### Parallel Data ###
 
 In the paper, we use the wmt14 en-de and en-ru langauge pairs, the language pairs are obtained from wmt14 website, here
 we have a shell script for downloading and preprocess the data. Use DE-EN as an example.
@@ -90,7 +58,7 @@ sudo make install
 cd ..
 ```
 
-### Monolingual Data ###
+#### Monolingual Data ###
 
 The command used for generate the monolingual databin is in the shell script
 
@@ -102,11 +70,11 @@ Also need to indicate several path such as the
 
 This script will generate a path ```wmt14_en_de_full``` which contains a parallel_databin
 
-## Step2: Baseline Training
+### Step2: Baseline Training
 
 we need to firstly train a baseline model. Take DE-EN as an example,
 
-### Train de-en transformer-big model as baseline ###
+#### Train de-en transformer-big model as baseline ###
 
 ```
 fairseq-train --fp16 \
@@ -124,7 +92,7 @@ fairseq-train --fp16 \
 where the ```$WMT14_DATABIN``` is the preprocessed databin file of wmt14 de-en bitext,
 and ```$BASELINE_DE_EN_CHECKPOINT``` is the output path to save de-en checkpoint files.
 
-### Train en-de transformer-big model as back-translation model ###
+#### Train en-de transformer-big model as back-translation model ###
 
 ```
 fairseq-train --fp16 \
@@ -155,11 +123,11 @@ bash $EVAL_DIR/sacrebleu.sh \
 
 where, the ```$WMT14_DATABIN/code``` is the bpe code learned in bitext preprocess phrase.
 
-## Step3: Back Transaltion
+### Step3: Back Transaltion
 
 we use the back translation model to translate the target side languages back into source side
 
-### Back Translation Synthetic Corpus ###
+#### Back Translation Synthetic Corpus ###
 
 here we can use beam or sampling method, for beam generation, using command
 
@@ -187,7 +155,7 @@ fairseq-generate \
     > sampling.out
 ```
 
-### Extract Back Translation Data ###
+#### Extract Back Translation Data ####
 
 Then we can extract them out using default script in fairseq. It is at
 fairseq/examples/backtranslation/extract_bt_data.py
@@ -201,7 +169,7 @@ python3 extract_bt_data.py \
 
 and we preprocess this backtranslation data and combine the back translation data with bitext parallel databin
 
-### Preprocess Back Translation Data ###
+#### Preprocess Back Translation Data ####
 
 ```
 EN_DICT=$WMT14_PATH/dict.en.txt
@@ -229,7 +197,7 @@ for LANG in en de; do \
 done
 ```
 
-### Train Back Translation Forward Model ###
+#### Train Back Translation Forward Model ####
 
 Finally we train and evaluate the back translation model.
 
@@ -259,11 +227,10 @@ bash $EVAL_DIR/sacrebleu.sh \
     $DE_EN_BT_BEAM_CHECKPOINT/checkpoint_best.pt
 ```
 
-the command are in the script ```wmt14_de_en_bt_beam```
 
-## Step4: Gamma
+### Step4: Gamma
 
-### Train Monolingual GPT Model ###
+#### Train Monolingual GPT Model ###
 
 Firstly to preprocess the single side languages of the parallel data, here the ```$DATA_DIR``` is the place where you
 put the cleaned corpus from preprocess. It needs train.de valid.de and test.de three files for trainset devset and
@@ -303,7 +270,7 @@ fairseq-train \
 Where the ```$WMT14_DE_DATABIN``` is the de side databin or, use the shell script```wmt14_de_en_de_gpt.sh```, need to
 indicate the bitext data path, output databin, etc.,
 
-### Candidates Generation ###
+#### Candidates Generation ###
 
 We prepare a shell script ```prepare_candidates/start.sh``` for sampling 50 candidates and score each candidates with monolingual model.
 
@@ -382,7 +349,7 @@ for SHARD in $(seq -f "%02g" 0 29); do \
 done
 ```
 
-### Scoring Importance ###
+#### Scoring Importance ###
 
 And scoring the importance with GPT,
 
@@ -420,11 +387,15 @@ echo "Normalizing the importance score"
 done
 ```
 
-## Step5: Gamma Corpus ##
+### Step5: Gamma Corpus ##
 
-there are two types of gamma corpus, deterministic(gamma selection) and stochastical method(gamma sampling).
+there are two types of gamma corpus, 
 
-### Gamma Selection ###
+gamma selection: select the candidates with highest gamma score
+
+gamma sampling: sample one candidates based on gamma score distribution.
+
+#### Gamma Selection ###
 
 For gamma selection corpus, we use
 
@@ -447,8 +418,9 @@ for SHARD in $(seq -f "%02g" 28 29); do \
         --output $OUTPUT_PATH/extracted_candidate.shard${SHARD}
 done
 ```
+Where ```$GAMMA``` is the gamma ratio which trade-off the importance and quality
 
-### Gamma Sampling ###
+#### Gamma Sampling ###
 
 For gamma sampling corpus, we use
 
@@ -517,7 +489,7 @@ for LANG in en de; do \
 done
 ```
 
-## Step5. Train Gamma Model ##
+### Step5: Train Gamma Model ##
 
 Finally we train the gamma back translation model using,
 
@@ -553,7 +525,7 @@ bash $EVAL_DIR/sacrebleu.sh \
     $DE_EN_GAMMA_SAMPLING_CHECKPOINT/checkpoint_best.pt
 ```
 
-# Main Experiments
+## Main Experiments
 We conduct the experiments on WMT14 EN-DE and EN-RU datasets, the results are shown below.
 
 | System          | EN-DE | DE-EN | EN-RU | RU-EN |
