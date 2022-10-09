@@ -2,6 +2,19 @@
 
 This repo is the code for NAACL2022 paper [On Synthetic Data for Back Translation](https://aclanthology.org/2022.naacl-main.32/)
 
+## Main Results
+
+We conduct the experiments on WMT14 EN-DE (4.5m) and EN-RU (2.5m) datasets, with equal-scale monolingual corpus. Our proposed Gamma methods outperform baseline methods (i.e. beam5, sampling) with a significant margin (EN-DE >1; DE-EN >0.9; RU-EN >0.4).
+
+| System          | EN-DE | DE-EN |  RU-EN |
+| --------------- | ----- | ----- |  ----- |
+| Transformer-big | 27.4  | 32.1  |  34.1  |
+| Beam            | 29.7  | 32.7  |  35.9  |
+| Sampling        | 30.0  | 34.1  |  35.6  |
+| Gamma Selection | 31.0  | 34.7  |  36.1  |
+| Gamma Sampling  | 30.9  | 35.0  |  36.3  |
+
+
 ## Requirements
 
 We use python3.7, pytorch>=1.10.0, and cuda>=10.2, and [fairseq 10.2](https://github.com/pytorch/fairseq/archive/refs/tags/v0.10.2.zip)
@@ -524,17 +537,6 @@ bash $EVAL_DIR/sacrebleu.sh \
     $WMT14_DATABIN/code \
     $DE_EN_GAMMA_SAMPLING_CHECKPOINT/checkpoint_best.pt
 ```
-
-## Main Experiments
-We conduct the experiments on WMT14 EN-DE and EN-RU datasets, the results are shown below.
-
-| System          | EN-DE | DE-EN | EN-RU | RU-EN |
-| --------------- | ----- | ----- | ----- | ----- |
-| Transformer-big | 27.4  | 32.1  | 35.9  | 34.1  |
-| Beam            | 29.7  | 32.7  | 39.6  | 35.9  |
-| Sampling        | 30.0  | 34.1  | 37.4  | 35.6  |
-| Gamma Selection | 31.0  | 34.7  | 35.7  | 36.1  |
-| Gamma Sampling  | 30.9  | 35.0  | 38.9  | 36.3  |
 
 
 ## Citation
