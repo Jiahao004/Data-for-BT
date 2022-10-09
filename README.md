@@ -1,4 +1,27 @@
-# importance-back-translation
+# On Synthetic Data for Back Translation
+
+This is the code for NAACL2022 paper [On Synthetic Data for Back Translation](https://aclanthology.org/2022.naacl-main.32/)
+
+```bitext
+@inproceedings{xu-etal-2022-synthetic,
+    title = "On Synthetic Data for Back Translation",
+    author = "Xu, Jiahao  and
+      Ruan, Yubin  and
+      Bi, Wei  and
+      Huang, Guoping  and
+      Shi, Shuming  and
+      Chen, Lihui  and
+      Liu, Lemao",
+    booktitle = "Proceedings of the 2022 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies",
+    month = jul,
+    year = "2022",
+    address = "Seattle, United States",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2022.naacl-main.32",
+    doi = "10.18653/v1/2022.naacl-main.32",
+    pages = "419--430",
+}
+```
 
 The implementation of paper on synthetic data for back translation
 
