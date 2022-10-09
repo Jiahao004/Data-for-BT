@@ -561,4 +561,4 @@ We conduct the experiments on WMT14 EN-DE and EN-RU datasets, the results are sh
 ```
 
 ## Questions?
-If you have and questions, welcome to drop an ssues.
+If you have and questions, welcome to drop an issue.
