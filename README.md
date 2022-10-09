@@ -50,7 +50,7 @@ we have a shell script for downloading and preprocess the data. Use DE-EN as an 
 
 the comman used for generate the parallel databin is in the shell script
 
-```wmt14_en_de_prepare/start.sh```
+```prepare_wmt14/start.sh```
 
 You need to indicate some variables such as ```$OUTPUT```,```$BPE_TOKENS```, etc., and this shell script could be used
 for another language pairs.
@@ -71,14 +71,13 @@ cd ..
 
 The command used for generate the monolingual databin is in the shell script
 
-```prepare_wmt14/start.sh```
+```prepare_en_mono/start.sh```
 
 Also need to indicate several path such as the  
 
-```$OUTPUT, $BPECODE ``` 
+```$OUTPUT```, ```$BPECODE ```,```$LANG``` etc.
 
-, etc.
-
+This script will generate a path ```wmt14_en_de_full``` which contains a parallel_databin
 
 ## Step2: Baseline Training
 
@@ -128,7 +127,7 @@ bash $EVAL_DIR/sacrebleu.sh \
     de-en \
     $WMT14_DATABIN \
     $WMT14_DATABIN/code \
-    $DE_EN_BT_BEAM_CHECKPOINT/checkpoint_best.pt
+    $DE_EN_BT_BEAM_CHECKPOINT/checkpoint_400000.pt
 ```
 
 where, the ```$WMT14_DATABIN/code``` is the bpe code learned in bitext preprocess phrase.
@@ -139,7 +138,7 @@ we use the back translation model to translate the target side languages back in
 
 ### Back Translation Synthetic Corpus ###
 
-here we can use beam or sampling method, for beam generation, using
+here we can use beam or sampling method, for beam generation, using command
 
 ```
 fairseq-generate \
@@ -172,7 +171,7 @@ fairseq/examples/backtranslation/extract_bt_data.py
 
 ```
 python3 extract_bt_data.py \
-    --minlen 1 --maxlen 512 \
+    --minlen 1 --maxlen 256 \
     --output $PATH_TO_BEAM/extracted_bt_data --srclang de --tgtlang en \
     $PATH_TO_BEAM/beam5.out
 ```
@@ -283,7 +282,11 @@ indicate the bitext data path, output databin, etc.,
 
 ### Candidates Generation ###
 
-for generate candidates, use
+We prepare a shell script ```prepare_candidates/start.sh``` for sampling 50 candidates and score each candidates with monolingual model.
+
+You need to specify several variables such as ```$srclang```, ```$tgtlang```, etc.
+
+If you want to do it manually, for generate candidates, use
 
 ```
 fairseq-generate \
@@ -296,9 +299,37 @@ fairseq-generate \
     > candidates.out
 ```
 
-or, you can use shard to parallel sampling candidates, the preprocess shell will automatically generate the shard for
-you.
+```$MONO_DATABIN```: the monolingual corpus fairseq databin
 
+```$BASELINE_EN_DE_CHECKPOINT```: back translation mdoel, and we sample 50 candidates
+
+We could also split the file in shard and generate candidates within each shard. Firstly we split
+the original monolingual bpe file into 30 shard, with 15,000 line per shard.
+```
+split --lines 150000 --numeric-suffixes \
+        --additional-suffix .${tgtlang} \
+        $MONO_DATA_PATH/bpe.monolingual.dedup.4500000.${tgtlang} \
+        $MONO_DATA_PATH/bpe.monolingual.dedup.
+```
+And preprocess each shard. 
+```
+CANDIDATES_PATH=$MONO_DATA_PATH/candidates
+mkdir -p $CANDIDATES_PATH
+for SHARD in $(seq -f "%02g" 0 29); do \
+    fairseq-preprocess \
+        --only-source \
+        --source-lang ${tgtlang} --target-lang ${srclang} \
+        --joined-dictionary \
+        --srcdict $WMT14_PATH/dict.${tgtlang}.txt \
+        --testpref $MONO_DATA_PATH/bpe.monolingual.dedup.${SHARD} \
+        --destdir $CANDIDATES_PATH/shard${SHARD} \
+        --workers 32; \
+    cp $WMT14_PATH/dict.${srclang}.txt $CANDIDATES_PATH/shard${SHARD}/; \
+done
+```
+where the ```$CANDIDATES_PATH``` is shard databin each shard.
+
+Then we generate 50 candidates within each shard.
 ```
 for SHARD in $(seq -f "%02g" 0 29); do \
     fairseq-generate --fp16 \
@@ -311,7 +342,7 @@ for SHARD in $(seq -f "%02g" 0 29); do \
 done
 ```
 
-where the ```$CANDIDATES_PATH``` is the path where the preprocess shell generate for each shard.
+
 
 Then, we extract them out, and remove bpe code
 
@@ -321,6 +352,10 @@ for SHARD in $(seq -f "%02g" 0 29); do \
         --output $CANDIDATES_PATH/shard${SHARD}/extracted_candidates.shard${SHARD} \
         --srclang de --tgtlang en  \
         < $CANDIDATES_PATH/shard${SHARD}/sampling50.shard${SHARD}.out
+    
+    python remove_bpe.py \
+        --input $CANDIDATES_PATH/shard${SHARD}/extracted_candidates.shard${SHARD}.$srclang \
+        --output $CANDIDATES_PATH/shard${SHARD}/extracted_candidates.shard${SHARD}.bpe_removed.$srclang
 done
 ```
 
